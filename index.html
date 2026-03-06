@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Cricket Friend</title>
+    <style>
+        :root {
+            --bg-color: #fff0f6;
+            --primary-pink: #ffdeeb;
+            --accent-pink: #f06292;
+            --grass-green: #c5e1a5;
+            --sun-color: #fff176;
+            --house-color: #ffe0b2;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', cursive, sans-serif;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        /* --- NAMING OVERLAY --- */
+        #name-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-color);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .name-box {
+            background: white;
+            padding: 2rem;
+            border-radius: 30px;
+            border: 5px solid var(--primary-pink);
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        }
+
+        input {
+            padding: 10px;
+            border-radius: 10px;
+            border: 2px solid var(--primary-pink);
+            margin: 10px 0;
+            font-size: 1rem;
+            text-align: center;
+            outline: none;
+        }
+
+        .container {
+            text-align: center;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 40px;
+            box-shadow: 0 15px 40px rgba(240, 98, 146, 0.2);
+            border: 6px solid var(--primary-pink);
+            width: 360px;
+            position: relative;
+            display: none; /* Hidden until named */
+        }
+
+        h1 { color: var(--accent-pink); font-size: 1.3rem; margin: 0 0 10px 0; }
+
+        #game-stage {
+            width: 100%; height: 320px;
+            background: #e1f5fe;
+            border-radius: 25px;
+            position: relative;
+            overflow: hidden;
+            border: 3px solid var(--primary-pink);
+        }
+
+        #home-scenery { position: absolute; width: 100%; height: 100%; transition: opacity 0.5s; }
+        .sun { position: absolute; top: 20px; left: 20px; width: 40px; height: 40px; background: var(--sun-color); border-radius: 50%; box-shadow: 0 0 20px rgba(255,241,118,0.6); }
+        .house { position: absolute; bottom: 40px; right: 40px; width: 70px; height: 70px; background: var(--house-color); border-radius: 10px; }
+        .roof { position: absolute; bottom: 110px; right: 30px; width: 0; height: 0; border-left: 45px solid transparent; border-right: 45px solid transparent; border-bottom: 50px solid #f06292; }
+        .door { position: absolute; bottom: 0; left: 20px; width: 25px; height: 40px; background: #d81b60; border-radius: 5px 5px 0 0; }
+        .home-grass { position: absolute; bottom: 0; width: 100%; height: 50px; background: #aed581; }
+
+        #pip-container {
+            position: absolute;
+            left: 50px; bottom: 40px;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transform: scaleX(-1);
+            pointer-events: none;
+        }
+
+        #pip-hat { font-size: 25px; height: 25px; margin-bottom: -15px; z-index: 11; }
+        #pip-emoji { font-size: 55px; line-height: 1; transition: transform 0.2s; }
+
+        .heart { position: absolute; font-size: 20px; animation: floatUp 1s forwards; z-index: 20; }
+        @keyframes floatUp { to { transform: translateY(-60px); opacity: 0; } }
+        #snack { position: absolute; font-size: 25px; display: none; left: 110px; bottom: 50px; z-index: 15; transform: scaleX(-1); }
+
+        #shop-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            z-index: 50; display: none;
+            flex-direction: column; align-items: center; justify-content: center; border-radius: 25px;
+        }
+        .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
+        .shop-item { background: var(--primary-pink); padding: 10px; border-radius: 15px; cursor: pointer; border: 2px solid white; }
+
+        .berry { position: absolute; font-size: 30px; z-index: 5; }
+        #grass-floor { position: absolute; bottom: 0; width: 100%; height: 25px; background: var(--grass-green); display: none; z-index: 2; }
+        .score-board { position: absolute; top: 10px; right: 10px; font-weight: bold; color: var(--accent-pink); z-index: 20; background: white; padding: 5px 10px; border-radius: 15px; border: 2px solid var(--primary-pink); }
+
+        .controls { margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        button { background-color: var(--primary-pink); border: none; padding: 10px; border-radius: 15px; color: #d81b60; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 0.85rem; }
+        button:hover { background-color: var(--accent-pink); color: white; }
+        #walk-btn { grid-column: span 2; background: var(--accent-pink); color: white; font-size: 1rem; }
+        #music-btn { position: absolute; top: -45px; right: 0; background: white; border: 2px solid var(--primary-pink); border-radius: 50%; width: 35px; height: 35px; font-size: 18px; padding: 0; }
+        #status-text { margin-top: 10px; color: #f06292; font-weight: bold; font-size: 0.85rem; min-height: 1.2rem;}
+    </style>
+</head>
+<body onkeydown="handleKeyDown(event)" onmousedown="handleAction()">
+
+    <div id="name-overlay">
+        <div class="name-box">
+            <h2 style="color:var(--accent-pink); margin-top:0;">Meet Your New Friend!</h2>
+            <p>What is your cricket's name?</p>
+            <input type="text" id="name-input" placeholder="Enter name here..." maxlength="12">
+            <br>
+            <button onclick="saveName()" style="background:var(--accent-pink); color:white; padding:10px 20px;">Start Adventure</button>
+        </div>
+    </div>
+
+    <div class="container" id="main-ui">
+        <button id="music-btn" onclick="toggleMusic()">🔇</button>
+        <h1 id="main-title">🍓 Pip's Sweet Quest 🍓</h1>
+        
+        <div id="game-stage">
+            <div id="score" class="score-board">🍓: 0</div>
+            
+            <div id="home-scenery">
+                <div class="sun"></div>
+                <div class="roof"></div>
+                <div class="house"><div class="door"></div></div>
+                <div class="home-grass"></div>
+            </div>
+
+            <div id="snack">🍪</div>
+
+            <div id="shop-overlay">
+                <h2 id="shop-title" style="color:var(--accent-pink); margin:0;">Tiny Hat Shop</h2>
+                <div class="shop-grid">
+                    <div class="shop-item" onclick="buyHat('🎀', 10)">🎀 10🍓</div>
+                    <div class="shop-item" onclick="buyHat('👑', 20)">👑 20🍓</div>
+                    <div class="shop-item" onclick="buyHat('🥳', 30)">🥳 30🍓</div>
+                    <div class="shop-item" onclick="buyHat('🕶️', 50)">🕶️ 50🍓</div>
+                </div>
+                <button onclick="toggleShop()">Close Shop</button>
+            </div>
+
+            <div id="grass-floor"></div>
+
+            <div id="pip-container">
+                <div id="pip-hat"></div>
+                <div id="pip-emoji">🦗</div>
+            </div>
+        </div>
+
+        <div id="status-text">Welcome home!</div>
+
+        <div class="controls" id="main-controls">
+            <button onclick="feed()">🍓 Feed</button>
+            <button onclick="sing()">🎵 Sing</button>
+            <button onclick="pet()">💖 Pet</button>
+            <button onclick="toggleShop()" style="background:#ba68c8; color:white;">🛍️ Shop</button>
+            <button id="walk-btn" onclick="startWalk()">✨ Go for Walk ✨</button>
+        </div>
+    </div>
+
+    <script>
+        let cricketName = "Pip";
+        const pipContainer = document.getElementById('pip-container');
+        const pipEmoji = document.getElementById('pip-emoji');
+        const pipHat = document.getElementById('pip-hat');
+        const snack = document.getElementById('snack');
+        const homeScenery = document.getElementById('home-scenery');
+        const grassFloor = document.getElementById('grass-floor');
+        const status = document.getElementById('status-text');
+        const scoreDisplay = document.getElementById('score');
+        const shopOverlay = document.getElementById('shop-overlay');
+        const musicBtn = document.getElementById('music-btn');
+        
+        let strawberries = 0;
+        let isGaming = false;
+        let pipY = 225;
+        let velocity = 0;
+        let gravity = 0.3;
+        let gameLoop;
+        let musicActive = false;
+        let musicInterval;
+
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function saveName() {
+            const input = document.getElementById('name-input').value.trim();
+            if(input !== "") {
+                cricketName = input;
+                document.getElementById('main-title').innerText = `🍓 ${cricketName}'s Sweet Quest 🍓`;
+                document.getElementById('shop-title').innerText = `${cricketName}'s Boutique`;
+                status.innerText = `Welcome home, ${cricketName}!`;
+            }
+            document.getElementById('name-overlay').style.display = 'none';
+            document.getElementById('main-ui').style.display = 'block';
+        }
+
+        function playSound(freq, type, dur, vol = 0.05) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + dur);
+        }
+
+        const melody = [440, 493, 523, 587, 659, 523, 440, 587];
+        let step = 0;
+        function toggleMusic() {
+            musicActive = !musicActive;
+            musicBtn.innerText = musicActive ? "🔊" : "🔇";
+            if (musicActive) {
+                musicInterval = setInterval(() => {
+                    playSound(melody[step % melody.length], 'sine', 0.4, 0.02);
+                    step++;
+                }, 600);
+            } else { clearInterval(musicInterval); }
+        }
+
+        function handleKeyDown(e) { if(e.code === "Space") { e.preventDefault(); handleAction(); } }
+        function handleAction() { if(isGaming) makeJump(); }
+
+        function toggleShop() {
+            if(isGaming) return;
+            shopOverlay.style.display = shopOverlay.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        function buyHat(hat, cost) {
+            if (strawberries >= cost) {
+                strawberries -= cost;
+                scoreDisplay.innerText = "🍓: " + strawberries;
+                pipHat.innerText = hat;
+                status.innerText = `${cricketName} looks adorable! ✨`;
+                playSound(1000, 'sine', 0.2);
+            } else {
+                status.innerText = `Need more berries, ${cricketName}! 🍓`;
+                playSound(200, 'sawtooth', 0.2);
+            }
+        }
+
+        function feed() {
+            if(isGaming) return;
+            snack.style.display = "block";
+            status.innerText = `${cricketName} says yum! 🍪`;
+            playSound(800, 'sine', 0.1);
+            setTimeout(() => {
+                snack.style.display = "none";
+                pipEmoji.style.transform = "scale(1.3)";
+                setTimeout(() => pipEmoji.style.transform = "scale(1)", 200);
+            }, 800);
+        }
+
+        function sing() {
+            if(isGaming) return;
+            status.innerText = `♫ ${cricketName} is singing! ♫`;
+            for(let i=0; i<3; i++) setTimeout(() => playSound(3500, 'square', 0.05), i * 150);
+        }
+
+        function pet() {
+            if(isGaming) return;
+            status.innerText = `${cricketName} loves you! 💕`;
+            playSound(1100, 'sine', 0.1);
+            for(let i=0; i<3; i++) {
+                setTimeout(() => {
+                    const heart = document.createElement('div');
+                    heart.className = 'heart';
+                    heart.innerText = '💕';
+                    heart.style.left = (Math.random() * 40 + 60) + 'px';
+                    heart.style.bottom = '100px';
+                    document.getElementById('game-stage').appendChild(heart);
+                    setTimeout(() => heart.remove(), 1000);
+                }, i * 200);
+            }
+        }
+
+        function startWalk() {
+            if(isGaming) return;
+            isGaming = true;
+            pipY = 200; velocity = 0;
+            homeScenery.style.opacity = "0";
+            grassFloor.style.display = "block";
+            document.getElementById('main-controls').style.opacity = "0.2";
+            document.getElementById('main-controls').style.pointerEvents = "none";
+            spawnBerry();
+            gameLoop = setInterval(updateGame, 20);
+        }
+
+        function spawnBerry() {
+            if(!isGaming) return;
+            const b = document.createElement('div');
+            b.className = 'berry'; b.innerText = '🍓';
+            b.style.top = Math.random() * 200 + 'px';
+            b.style.right = '-40px';
+            document.getElementById('game-stage').appendChild(b);
+            let bPos = -40;
+            const moveB = setInterval(() => {
+                if(!isGaming) { clearInterval(moveB); b.remove(); return; }
+                bPos += 4; b.style.right = bPos + 'px';
+                const pRect = pipContainer.getBoundingClientRect();
+                const bRect = b.getBoundingClientRect();
+                if (pRect.right > bRect.left && pRect.left < bRect.right && pRect.bottom > bRect.top && pRect.top < bRect.bottom) {
+                    strawberries++;
+                    scoreDisplay.innerText = "🍓: " + strawberries;
+                    playSound(1200, 'sine', 0.05);
+                    b.remove(); clearInterval(moveB);
+                }
+                if(bPos > 400) { clearInterval(moveB); b.remove(); }
+            }, 20);
+            setTimeout(spawnBerry, 1200);
+        }
+
+        function updateGame() {
+            velocity += gravity;
+            pipY += velocity;
+            pipContainer.style.bottom = "auto";
+            pipContainer.style.top = pipY + "px";
+            pipContainer.style.transform = `scaleX(-1) rotate(${-velocity * 3}deg)`;
+            if (pipY > 270 || pipY < -20) gameOver();
+        }
+
+        function makeJump() { velocity = -5.8; playSound(600, 'sine', 0.05); }
+
+        function gameOver() {
+            if(!isGaming) return;
+            isGaming = false;
+            clearInterval(gameLoop);
+            playSound(150, 'sawtooth', 0.4);
+            setTimeout(() => {
+                homeScenery.style.opacity = "1";
+                grassFloor.style.display = "none";
+                pipContainer.style.top = "auto";
+                pipContainer.style.bottom = "40px";
+                pipContainer.style.transform = "scaleX(-1)";
+                document.getElementById('main-controls').style.opacity = "1";
+                document.getElementById('main-controls').style.pointerEvents = "auto";
+                status.innerText = `Welcome home, ${cricketName}!`;
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
